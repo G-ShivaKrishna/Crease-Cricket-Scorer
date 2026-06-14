@@ -640,13 +640,18 @@ fun MatchSetupScreen(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
-    // Team names decided by user (default values are standard teams from pre-population)
-    var teamAName by remember { mutableStateOf("Chennai Chargers") }
-    var teamBName by remember { mutableStateOf("Bangalore Blitz") }
+    // Team names decided by user
+    var teamAName by remember { mutableStateOf("") }
+    var teamBName by remember { mutableStateOf("") }
 
-    var venue by remember { mutableStateOf("Greenfield Oval, Mumbai") }
+    var venue by remember { mutableStateOf("") }
     var oversCount by remember { mutableStateOf("5") }
     val ballsPerOver by remember { mutableStateOf(6) }
+
+    // Toss dialog state
+    var showTossSetupDialog by remember { mutableStateOf(false) }
+    var tossWinnerIsTeamA by remember { mutableStateOf(true) }
+    var tossDecision by remember { mutableStateOf("BAT") } // BAT or BOWL
 
     // Date/Time
     val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
@@ -1337,7 +1342,7 @@ fun MatchSetupScreen(
                     val trimmedA = teamAName.trim()
                     val trimmedB = teamBName.trim()
                     if (trimmedA.isEmpty() || trimmedB.isEmpty()) {
-                        Toast.makeText(context, "Please decide both team names", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Please enter both team names", Toast.LENGTH_SHORT).show()
                         return@Button
                     }
                     if (trimmedA.equals(trimmedB, ignoreCase = true)) {
@@ -1348,22 +1353,10 @@ fun MatchSetupScreen(
                         Toast.makeText(context, "Please configure/select players for both playing Elevens", Toast.LENGTH_SHORT).show()
                         return@Button
                     }
-
-                    // Proceed via smart custom teams match creation in VM
-                    viewModel.createMatchWithCustomTeams(
-                        teamAName = trimmedA,
-                        teamBName = trimmedB,
-                        venue = venue,
-                        overs = oversCount.toIntOrNull() ?: 5,
-                        ballsPerOver = ballsPerOver,
-                        teamAPlayers = teamASelected.toList(),
-                        teamBPlayers = teamBSelected.toList(),
-                        scheduledDate = currentDateText,
-                        scheduledTime = currentTimeText,
-                        onComplete = { newMatchId ->
-                            onMatchStarted(newMatchId)
-                        }
-                    )
+                    // Show toss dialog before creating match
+                    tossWinnerIsTeamA = true
+                    tossDecision = "BAT"
+                    showTossSetupDialog = true
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1377,6 +1370,118 @@ fun MatchSetupScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text("Proceed to Toss & Play", fontWeight = FontWeight.Black, fontSize = 16.sp, color = Color.White)
+                }
+            }
+        }
+    }
+
+    // Toss Setup Dialog — shown after team setup is complete
+    if (showTossSetupDialog) {
+        val trimmedA = teamAName.trim()
+        val trimmedB = teamBName.trim()
+        Dialog(onDismissRequest = { showTossSetupDialog = false }) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = LightSurface),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text("Toss", fontWeight = FontWeight.Black, fontSize = 20.sp, color = TurfGreen)
+                    Text("$trimmedA  vs  $trimmedB", fontSize = 13.sp, color = Color(0xFF94A3B8), fontWeight = FontWeight.Bold)
+
+                    HorizontalDivider(color = Color(0xFF334155))
+
+                    Text("Who won the toss?", fontSize = 13.sp, color = Color.White, fontWeight = FontWeight.SemiBold)
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(
+                            onClick = { tossWinnerIsTeamA = true },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (tossWinnerIsTeamA) TurfGreen else DarkBackground
+                            ),
+                            modifier = Modifier.weight(1f)
+                        ) { Text(trimmedA, maxLines = 1, fontSize = 12.sp) }
+                        Button(
+                            onClick = { tossWinnerIsTeamA = false },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (!tossWinnerIsTeamA) TurfGreen else DarkBackground
+                            ),
+                            modifier = Modifier.weight(1f)
+                        ) { Text(trimmedB, maxLines = 1, fontSize = 12.sp) }
+                    }
+
+                    val tossWinnerName = if (tossWinnerIsTeamA) trimmedA else trimmedB
+                    Text("$tossWinnerName elected to:", fontSize = 13.sp, color = Color.White, fontWeight = FontWeight.SemiBold)
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(
+                            onClick = { tossDecision = "BAT" },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (tossDecision == "BAT") TurfGreen else DarkBackground
+                            ),
+                            modifier = Modifier.weight(1f)
+                        ) { Text("BAT FIRST", fontSize = 12.sp) }
+                        Button(
+                            onClick = { tossDecision = "BOWL" },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (tossDecision == "BOWL") TurfGreen else DarkBackground
+                            ),
+                            modifier = Modifier.weight(1f)
+                        ) { Text("BOWL FIRST", fontSize = 12.sp) }
+                    }
+
+                    // Summary line
+                    val decisionText = if (tossDecision == "BAT") "bat" else "bowl"
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = TurfGreen.copy(alpha = 0.15f)),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            "$tossWinnerName won the toss and elected to $decisionText first",
+                            modifier = Modifier.padding(10.dp),
+                            fontSize = 12.sp,
+                            color = TurfLime,
+                            fontWeight = FontWeight.SemiBold,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(
+                            onClick = { showTossSetupDialog = false },
+                            modifier = Modifier.weight(1f),
+                            border = BorderStroke(1.dp, Color(0xFF334155))
+                        ) {
+                            Text("Back", color = Color(0xFF94A3B8))
+                        }
+                        Button(
+                            onClick = {
+                                showTossSetupDialog = false
+                                viewModel.createMatchWithCustomTeams(
+                                    teamAName = trimmedA,
+                                    teamBName = trimmedB,
+                                    venue = venue.trim().ifEmpty { "TBD" },
+                                    overs = oversCount.toIntOrNull() ?: 5,
+                                    ballsPerOver = ballsPerOver,
+                                    teamAPlayers = teamASelected.toList(),
+                                    teamBPlayers = teamBSelected.toList(),
+                                    scheduledDate = currentDateText,
+                                    scheduledTime = currentTimeText,
+                                    tossWinnerIsTeamA = tossWinnerIsTeamA,
+                                    tossDecision = tossDecision,
+                                    onComplete = { newMatchId ->
+                                        onMatchStarted(newMatchId)
+                                    }
+                                )
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = TurfGreen),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Start Match", fontWeight = FontWeight.Bold, color = Color.White)
+                        }
+                    }
                 }
             }
         }
@@ -1430,6 +1535,7 @@ fun ScorerConsoleScreen(
     var wicketDismissalType by remember { mutableStateOf("BOWLED") } // BOWLED, CAUGHT, LBW, RUN_OUT, STUMPED, HIT_WICKET, RETIRED_OUT
     var wicketDismissedBatterId by remember { mutableStateOf(0) }
     var wicketFielderName by remember { mutableStateOf("") }
+    var wicketFielderExpanded by remember { mutableStateOf(false) }
 
     // Match Completed dialog Suggest Player Of Match
     var showMatchCompletionDialog by remember { mutableStateOf(false) }
@@ -1876,7 +1982,9 @@ fun ScorerConsoleScreen(
                 Button(
                     onClick = {
                         if (strikerId == 0 || bowlerId == 0) return@Button
+                        wicketDismissalType = "BOWLED"
                         wicketDismissedBatterId = strikerId
+                        wicketFielderName = ""
                         showWicketDialog = true
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFEF2F2), contentColor = Color(0xFFDC2626)),
@@ -1990,6 +2098,14 @@ fun ScorerConsoleScreen(
 
     // 2. Wicket Fall Dismissal input dialog
     if (showWicketDialog) {
+        // Build bowling team full squad for fielder picker
+        val bowlingTeamId = activeInnings.bowlingTeamId
+        val bowlingSquadIds = if (bowlingTeamId == match.teamAId)
+            match.teamASquadIds.split(",").filter { it.isNotEmpty() }.mapNotNull { it.toIntOrNull() }
+        else
+            match.teamBSquadIds.split(",").filter { it.isNotEmpty() }.mapNotNull { it.toIntOrNull() }
+        val bowlingTeamPlayers = bowlingSquadIds.mapNotNull { playersMap[it] }
+
         Dialog(onDismissRequest = { showWicketDialog = false }) {
             Card(
                 colors = CardDefaults.cardColors(containerColor = LightSurface),
@@ -2011,41 +2127,116 @@ fun ScorerConsoleScreen(
                                 .padding(vertical = 4.dp)
                         ) {
                             RadioButton(selected = isSel, onClick = { wicketDismissalType = type })
-                            Text(type, color = Color.DarkGray)
+                            Text(type, color = Color.White)
                         }
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
+                    // --- Dismissed Batter ---
+                    // For non-RUN_OUT: striker is auto-selected (shown as info)
+                    // For RUN_OUT: allow choosing striker or non-striker
                     if (wicketDismissalType == "RUN_OUT") {
-                        Text("Dismissed Batter", fontSize = 12.sp, color = Color.Gray)
+                        Text("Dismissed Batter", fontSize = 12.sp, color = Color(0xFF94A3B8), fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(4.dp))
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Button(
                                 onClick = { wicketDismissedBatterId = strikerId },
-                                colors = ButtonDefaults.buttonColors(containerColor = if (wicketDismissedBatterId == strikerId) Color.Red else LightSurface, contentColor = if (wicketDismissedBatterId == strikerId) Color.White else Color.Red),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (wicketDismissedBatterId == strikerId) Color.Red else DarkBackground,
+                                    contentColor = Color.White
+                                ),
                                 modifier = Modifier.weight(1f)
-                            ) { Text(playersMap[strikerId]?.name ?: "Striker") }
+                            ) { Text(playersMap[strikerId]?.name ?: "Striker", fontSize = 12.sp, maxLines = 1) }
 
                             Button(
                                 onClick = { wicketDismissedBatterId = nonStrikerId },
-                                colors = ButtonDefaults.buttonColors(containerColor = if (wicketDismissedBatterId == nonStrikerId) Color.Red else LightSurface, contentColor = if (wicketDismissedBatterId == nonStrikerId) Color.White else Color.Red),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (wicketDismissedBatterId == nonStrikerId) Color.Red else DarkBackground,
+                                    contentColor = Color.White
+                                ),
                                 modifier = Modifier.weight(1f)
-                            ) { Text(playersMap[nonStrikerId]?.name ?: "Non-Striker") }
+                            ) { Text(playersMap[nonStrikerId]?.name ?: "Non-Striker", fontSize = 12.sp, maxLines = 1) }
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                    } else {
+                        // Auto-selected: striker is dismissed
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color.Red.copy(alpha = 0.12f), RoundedCornerShape(8.dp))
+                                .padding(horizontal = 12.dp, vertical = 8.dp)
+                        ) {
+                            Icon(Icons.Default.Person, contentDescription = null, tint = Color.Red, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text("Dismissed Batter (On Strike)", fontSize = 10.sp, color = Color(0xFF94A3B8))
+                                Text(playersMap[strikerId]?.name ?: "Striker", fontSize = 13.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                            }
                         }
                         Spacer(modifier = Modifier.height(12.dp))
                     }
 
+                    // --- Fielder picker (bowling team players list) ---
                     if (wicketDismissalType == "CAUGHT" || wicketDismissalType == "RUN_OUT" || wicketDismissalType == "STUMPED") {
-                        OutlinedTextField(
-                            value = wicketFielderName,
-                            onValueChange = { wicketFielderName = it },
-                            label = { Text("Fielder Name") },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = getDarkTextFieldColors(Color.Red)
+                        Text(
+                            if (wicketDismissalType == "STUMPED") "Wicket-Keeper" else "Select Fielder",
+                            fontSize = 12.sp,
+                            color = Color(0xFF94A3B8),
+                            fontWeight = FontWeight.SemiBold
                         )
-                    }
+                        Spacer(modifier = Modifier.height(4.dp))
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                        // Wrap scrollable chip list inside a fixed-height box
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 160.dp)
+                                .border(1.dp, Color(0xFF334155), RoundedCornerShape(8.dp))
+                        ) {
+                            LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                                items(bowlingTeamPlayers) { player ->
+                                    val isSelected = wicketFielderName == player.name
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable { wicketFielderName = player.name }
+                                            .background(
+                                                if (isSelected) Color.Red.copy(alpha = 0.18f)
+                                                else Color.Transparent
+                                            )
+                                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(
+                                            player.name,
+                                            color = if (isSelected) Color.Red else Color.White,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                            fontSize = 13.sp
+                                        )
+                                        if (isSelected) {
+                                            Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color.Red, modifier = Modifier.size(16.dp))
+                                        }
+                                    }
+                                    HorizontalDivider(color = Color(0xFF1E293B), thickness = 0.5.dp)
+                                }
+                            }
+                        }
+
+                        // Show selected fielder name as confirmation
+                        if (wicketFielderName.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                "Selected: $wicketFielderName",
+                                fontSize = 11.sp,
+                                color = Color.Red,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
 
                     Button(
                         onClick = {
@@ -2063,6 +2254,7 @@ fun ScorerConsoleScreen(
                             )
                             showWicketDialog = false
                             wicketFielderName = ""
+                            wicketDismissedBatterId = strikerId
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
                         modifier = Modifier.fillMaxWidth().testTag("confirm_wicket_btn")

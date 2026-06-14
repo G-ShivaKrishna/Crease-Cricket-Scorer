@@ -145,6 +145,8 @@ class CricketViewModel(application: Application) : AndroidViewModel(application)
         teamBPlayers: List<PlayerEntity>,
         scheduledDate: String,
         scheduledTime: String,
+        tossWinnerIsTeamA: Boolean = true,
+        tossDecision: String = "BAT",
         onComplete: (Int) -> Unit
     ) {
         viewModelScope.launch {
@@ -199,6 +201,24 @@ class CricketViewModel(application: Application) : AndroidViewModel(application)
 
             val newId = repository.insertMatch(match).toInt()
             setActiveMatch(newId)
+
+            // Automatically submit the toss result so match goes LIVE immediately
+            val tossWinnerId = if (tossWinnerIsTeamA) teamAId else teamBId
+            val firstBattingTeamId = if (tossDecision == "BAT") tossWinnerId else {
+                if (tossWinnerId == teamAId) teamBId else teamAId
+            }
+            val secondBattingTeamId = if (firstBattingTeamId == teamAId) teamBId else teamAId
+            val updatedMatch = match.copy(
+                id = newId,
+                tossWinnerId = tossWinnerId,
+                tossDecision = tossDecision,
+                firstInningsTeamId = firstBattingTeamId,
+                secondInningsTeamId = secondBattingTeamId,
+                status = "LIVE",
+                currentInningsNo = 1
+            )
+            repository.updateMatch(updatedMatch)
+
             onComplete(newId)
         }
     }
