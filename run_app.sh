@@ -45,17 +45,34 @@ if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -lt "${#devices[@]}" ]; then
     fi
   fi
 
-  echo ""
-  echo "======================================================================"
-  echo "Streaming real-time log traces from the app (Press Ctrl+C to exit logs)"
-  echo "======================================================================"
-  echo ""
-  
-  # Clear previous log buffer
-  adb -s "$SELECTED_DEVICE" logcat -c
-  
-  # Stream live logs for the application package in color
-  adb -s "$SELECTED_DEVICE" logcat -v color --package=com.aistudio.cricketscorer.fymqpx
+  echo "Waiting for app to start and fetching PID..."
+  PID=""
+  # Try to find the PID for up to 5 seconds
+  for i in {1..10}; do
+    PID=$(adb -s "$SELECTED_DEVICE" shell pidof com.aistudio.cricketscorer.fymqpx | tr -d '\r' | awk '{print $1}')
+    if [ -n "$PID" ]; then
+      break
+    fi
+    sleep 0.5
+  done
+
+  if [ -z "$PID" ]; then
+    echo "Could not resolve PID for package com.aistudio.cricketscorer.fymqpx."
+    echo "Streaming all logs instead..."
+    adb -s "$SELECTED_DEVICE" logcat -v color
+  else
+    echo ""
+    echo "======================================================================"
+    echo "Streaming logs for PID $PID (Press Ctrl+C to exit)"
+    echo "======================================================================"
+    echo ""
+    
+    # Clear previous log buffer
+    adb -s "$SELECTED_DEVICE" logcat -c
+    
+    # Stream live logs for the application PID in color
+    adb -s "$SELECTED_DEVICE" logcat -v color --pid="$PID"
+  fi
 else
   echo "Invalid choice. Exiting."
   exit 1

@@ -153,10 +153,10 @@ class CricketViewModel(application: Application) : AndroidViewModel(application)
 
             val allT = repository.allTeams.first()
             val existingA = allT.find { it.name.equals(trimmedA, ignoreCase = true) }
-            val teamAId = existingA?.id?.toInt() ?: repository.insertTeam(TeamEntity(name = trimmedA, logoUrl = "🏏")).toInt()
+            val teamAId = existingA?.id?.toInt() ?: repository.insertTeam(TeamEntity(name = trimmedA, logoUrl = "")).toInt()
 
             val existingB = allT.find { it.name.equals(trimmedB, ignoreCase = true) }
-            val teamBId = existingB?.id?.toInt() ?: repository.insertTeam(TeamEntity(name = trimmedB, logoUrl = "⚡")).toInt()
+            val teamBId = existingB?.id?.toInt() ?: repository.insertTeam(TeamEntity(name = trimmedB, logoUrl = "")).toInt()
 
             val allP = repository.allPlayers.first()
 
@@ -185,8 +185,8 @@ class CricketViewModel(application: Application) : AndroidViewModel(application)
                 teamBId = teamBId,
                 teamAName = trimmedA,
                 teamBName = trimmedB,
-                teamALogo = existingA?.logoUrl ?: "🏏",
-                teamBLogo = existingB?.logoUrl ?: "⚡",
+                teamALogo = existingA?.logoUrl ?: "",
+                teamBLogo = existingB?.logoUrl ?: "",
                 venue = venue,
                 scheduledDate = scheduledDate,
                 scheduledTime = scheduledTime,

@@ -449,7 +449,7 @@ fun MatchCardItem(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     val statusTextAndColor = when (match.status) {
-                        "LIVE" -> "● LIVE" to Color.Red
+                        "LIVE" -> "LIVE" to Color.Red
                         "COMPLETED" -> "COMPLETED" to TurfGreen
                         "PRE_MATCH" -> "UPCOMING" to Color(0xFF94A3B8)
                         else -> "ABANDONED" to Color(0xFFCBD5E1)
@@ -487,7 +487,7 @@ fun MatchCardItem(
                 // Team A logo and name
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                     Text(
-                        match.teamALogo.ifEmpty { "🏏" },
+                        match.teamALogo.ifEmpty { match.teamAName.take(1).uppercase() },
                         fontSize = 24.sp,
                         modifier = Modifier
                             .size(36.dp)
@@ -529,7 +529,7 @@ fun MatchCardItem(
                 // Team B logo and name
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                     Text(
-                        match.teamBLogo.ifEmpty { "🏏" },
+                        match.teamBLogo.ifEmpty { match.teamBName.take(1).uppercase() },
                         fontSize = 24.sp,
                         modifier = Modifier
                             .size(36.dp)
@@ -762,7 +762,7 @@ fun MatchSetupScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "🏏 BATTING TEAM A",
+                        text = "BATTING TEAM A",
                         fontWeight = FontWeight.Bold,
                         color = TurfLime,
                         fontSize = 14.sp
@@ -833,7 +833,7 @@ fun MatchSetupScreen(
                                 .padding(horizontal = 8.dp, vertical = 2.dp)
                         ) {
                             Text(
-                                text = if (teamASelected.size == 11) "✓ Ideal XI" else "${teamASelected.size}/11",
+                                text = if (teamASelected.size == 11) "Ideal XI" else "${teamASelected.size}/11",
                                 fontSize = 11.sp,
                                 color = if (teamASelected.size == 11) Color(0xFF34D399) else Color(0xFFF87171),
                                 fontWeight = FontWeight.Bold
@@ -926,7 +926,7 @@ fun MatchSetupScreen(
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.weight(1f).testTag("generate_players_a_btn")
                         ) {
-                            Text("⚡ Auto-Fill XI", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text("Auto-Fill XI", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
 
                         Button(
@@ -978,10 +978,10 @@ fun MatchSetupScreen(
                                     ) {
                                         Text(
                                             text = when (newPlayerRoleA) {
-                                                "BATS_MAN" -> "🏏 BAT"
-                                                "BOWLER" -> "🍒 BOWL"
-                                                "ALL_ROUNDER" -> "⚡ ALL"
-                                                else -> "🧤 WK"
+                                                "BATS_MAN" -> "BAT"
+                                                "BOWLER" -> "BOWL"
+                                                "ALL_ROUNDER" -> "ALL"
+                                                else -> "WK"
                                             },
                                             fontSize = 10.sp
                                         )
@@ -1028,7 +1028,7 @@ fun MatchSetupScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "🍒 BOWLING TEAM B",
+                        text = "BOWLING TEAM B",
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFFEF4444),
                         fontSize = 14.sp
@@ -1099,7 +1099,7 @@ fun MatchSetupScreen(
                                 .padding(horizontal = 8.dp, vertical = 2.dp)
                         ) {
                             Text(
-                                text = if (teamBSelected.size == 11) "✓ Ideal XI" else "${teamBSelected.size}/11",
+                                text = if (teamBSelected.size == 11) "Ideal XI" else "${teamBSelected.size}/11",
                                 fontSize = 11.sp,
                                 color = if (teamBSelected.size == 11) Color(0xFF34D399) else Color(0xFFF87171),
                                 fontWeight = FontWeight.Bold
@@ -1191,7 +1191,7 @@ fun MatchSetupScreen(
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.weight(1f).testTag("generate_players_b_btn")
                         ) {
-                            Text("⚡ Auto-Fill XI", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text("Auto-Fill XI", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
 
                         Button(
@@ -1242,10 +1242,10 @@ fun MatchSetupScreen(
                                     ) {
                                         Text(
                                             text = when (newPlayerRoleB) {
-                                                "BATS_MAN" -> "🏏 BAT"
-                                                "BOWLER" -> "🍒 BOWL"
-                                                "ALL_ROUNDER" -> "⚡ ALL"
-                                                else -> "🧤 WK"
+                                                "BATS_MAN" -> "BAT"
+                                                "BOWLER" -> "BOWL"
+                                                "ALL_ROUNDER" -> "ALL"
+                                                else -> "WK"
                                             },
                                             fontSize = 10.sp
                                         )
@@ -1291,7 +1291,7 @@ fun MatchSetupScreen(
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("⚙️ MATCH ENVIRONMENT", fontWeight = FontWeight.Bold, color = TurfGreen, fontSize = 14.sp)
+                    Text("MATCH ENVIRONMENT", fontWeight = FontWeight.Bold, color = TurfGreen, fontSize = 14.sp)
                     Spacer(modifier = Modifier.height(12.dp))
 
                     OutlinedTextField(
@@ -1376,7 +1376,7 @@ fun MatchSetupScreen(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Proceed to Toss & Play 🏏", fontWeight = FontWeight.Black, fontSize = 16.sp, color = Color.White)
+                    Text("Proceed to Toss & Play", fontWeight = FontWeight.Black, fontSize = 16.sp, color = Color.White)
                 }
             }
         }
@@ -1902,7 +1902,7 @@ fun ScorerConsoleScreen(
                             colors = ButtonDefaults.buttonColors(containerColor = GoldAccent, contentColor = TurfGreen),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("PROCEED TO 2ND INNINGS ➔", fontWeight = FontWeight.Black)
+                            Text("PROCEED TO 2ND INNINGS", fontWeight = FontWeight.Black)
                         }
                     } else {
                         Button(
@@ -1915,7 +1915,7 @@ fun ScorerConsoleScreen(
                             colors = ButtonDefaults.buttonColors(containerColor = TurfGreen, contentColor = Color.White),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("FINALIZE MATCH RESULT ✓", fontWeight = FontWeight.Black)
+                            Text("FINALIZE MATCH RESULT", fontWeight = FontWeight.Black)
                         }
                     }
                 }
@@ -2084,7 +2084,7 @@ fun ScorerConsoleScreen(
                 modifier = Modifier.padding(16.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Over Completed! 🔔", fontWeight = FontWeight.Black, fontSize = 16.sp, color = TurfGreen)
+                    Text("Over Completed!", fontWeight = FontWeight.Black, fontSize = 16.sp, color = TurfGreen)
                     Spacer(modifier = Modifier.height(4.dp))
                     Text("Please choose bowler for the next over:", fontSize = 12.sp, color = Color(0xFF94A3B8))
                     Spacer(modifier = Modifier.height(12.dp))
@@ -2471,7 +2471,7 @@ fun LiveCenterTab(state: ComputedMatchState) {
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                "🏏 " + b.name + (if (b.isStriker) " *" else ""),
+                                b.name + (if (b.isStriker) " *" else ""),
                                 fontWeight = FontWeight.Bold,
                                 color = if (b.isStriker) TurfLime else Color.DarkGray
                             )
@@ -2815,7 +2815,7 @@ fun TeamsRosterScreen(viewModel: CricketViewModel) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                team.logoUrl.ifEmpty { "🏏" },
+                                team.logoUrl.ifEmpty { team.name.take(1).uppercase() },
                                 fontSize = 32.sp,
                                 modifier = Modifier
                                     .size(48.dp)
@@ -2861,7 +2861,7 @@ fun TeamsRosterScreen(viewModel: CricketViewModel) {
 
     if (showAddTeamDialog) {
         var teamName by remember { mutableStateOf("") }
-        var teamLogo by remember { mutableStateOf("🏏") }
+        var teamLogo by remember { mutableStateOf("") }
 
         Dialog(onDismissRequest = { showAddTeamDialog = false }) {
             Card(
@@ -2883,19 +2883,7 @@ fun TeamsRosterScreen(viewModel: CricketViewModel) {
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    Text("Choose Emoji Logo", fontSize = 12.sp, color = Color.Gray)
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        listOf("🏏", "🦁", "🐯", "⚡", "☄️", "🛡️", "🐉", "🦅").forEach { emoji ->
-                            Text(
-                                emoji,
-                                fontSize = 24.sp,
-                                modifier = Modifier
-                                    .clickable { teamLogo = emoji }
-                                    .background(if (teamLogo == emoji) LightSurface else Color.Transparent)
-                                    .padding(8.dp)
-                            )
-                        }
-                    }
+                    // Logo will be generated from initials automatically
 
                     Spacer(modifier = Modifier.height(24.dp))
 
