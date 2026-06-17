@@ -1,79 +1,37 @@
 #!/bin/bash
+set -e
 
-# Find connected devices and emulators
-devices=($(adb devices | grep -v "List of devices" | grep -v "^$" | awk '{print $1}'))
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$PROJECT_DIR"
 
-if [ ${#devices[@]} -eq 0 ]; then
-  echo "No connected devices or emulators found."
-  exit 1
-fi
+echo "=============================="
+echo " CREASE CRICKET SCORER v2.0"
+echo " Flutter Edition"
+echo "=============================="
 
-echo "Available devices:"
-for i in "${!devices[@]}"; do
-  echo "[$i] ${devices[$i]}"
-done
-
-read -p "Choose a device number [0-$(( ${#devices[@]} - 1 ))]: " choice
-
-if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -lt "${#devices[@]}" ]; then
-  SELECTED_DEVICE="${devices[$choice]}"
-  echo "Selected device: $SELECTED_DEVICE"
-  
-  echo "Building debug APK..."
-  ./gradlew assembleDebug
-  
-  if [ $? -ne 0 ]; then
-    echo "Build failed. Exiting."
+# Check Flutter
+if ! command -v flutter &> /dev/null; then
+    echo "Flutter not found. Please install Flutter SDK."
     exit 1
-  fi
-  
-  echo "Uninstalling existing app to prevent signature mismatch..."
-  adb -s "$SELECTED_DEVICE" uninstall com.aistudio.cricketscorer.fymqpx 2>/dev/null
-  
-  echo "Deploying and running the application..."
-  ~/.local/bin/android run --device="$SELECTED_DEVICE" --apks=app/build/outputs/apk/debug/app-debug.apk
-  
-  # If it is a physical device (not starting with "emulator"), automatically launch scrcpy screen mirroring
-  if [[ ! "$SELECTED_DEVICE" =~ ^emulator- ]]; then
-    if command -v scrcpy >/dev/null 2>&1 || [ -f /opt/homebrew/bin/scrcpy ]; then
-      # Check if scrcpy is already running for this device
-      if ! pgrep -f "scrcpy.*$SELECTED_DEVICE" >/dev/null; then
-        echo "Launching screen mirroring (scrcpy) for physical device..."
-        export PATH="/Users/shivakrishnareddy/Library/Android/sdk/platform-tools:$PATH"
-        /opt/homebrew/bin/scrcpy -s "$SELECTED_DEVICE" >/dev/null 2>&1 &
-      fi
-    fi
-  fi
-
-  echo "Waiting for app to start and fetching PID..."
-  PID=""
-  # Try to find the PID for up to 5 seconds
-  for i in {1..10}; do
-    PID=$(adb -s "$SELECTED_DEVICE" shell pidof com.aistudio.cricketscorer.fymqpx | tr -d '\r' | awk '{print $1}')
-    if [ -n "$PID" ]; then
-      break
-    fi
-    sleep 0.5
-  done
-
-  if [ -z "$PID" ]; then
-    echo "Could not resolve PID for package com.aistudio.cricketscorer.fymqpx."
-    echo "Streaming all logs instead..."
-    adb -s "$SELECTED_DEVICE" logcat -v color
-  else
-    echo ""
-    echo "======================================================================"
-    echo "Streaming logs for PID $PID (Press Ctrl+C to exit)"
-    echo "======================================================================"
-    echo ""
-    
-    # Clear previous log buffer
-    adb -s "$SELECTED_DEVICE" logcat -c
-    
-    # Stream live logs for the application PID in color
-    adb -s "$SELECTED_DEVICE" logcat -v color --pid="$PID"
-  fi
-else
-  echo "Invalid choice. Exiting."
-  exit 1
 fi
+
+# Check devices
+echo ""
+echo "Checking for connected devices..."
+DEVICES=$(flutter devices 2>/dev/null | grep -v "^$" | grep -v "^Flutter" | tail -n +2)
+echo "$DEVICES"
+
+# Build
+echo ""
+echo "Building Flutter debug APK..."
+flutter build apk --debug 2>&1
+
+# Install and run
+echo ""
+echo "Installing on device..."
+flutter install --debug 2>&1
+
+echo ""
+echo "Launching app and streaming logs..."
+echo "(Press Ctrl+C to stop)"
+flutter run --debug 2>&1
