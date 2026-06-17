@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../providers/cricket_providers.dart';
 import '../../domain/scoring_engine.dart';
 import '../../data/models/player.dart';
+import '../../data/models/match.dart';
 import '../theme/app_theme.dart';
 
 class ScorerConsoleScreen extends ConsumerStatefulWidget {
@@ -160,7 +161,7 @@ class _ScorerConsoleScreenState extends ConsumerState<ScorerConsoleScreen> {
   }
 
   // ─── Player Selectors ──────────────────────────────────────
-  Widget _buildPlayerSelectors(InningsState innings, Map<int, PlayerModel> pMap, match) {
+  Widget _buildPlayerSelectors(InningsState innings, Map<int, PlayerModel> pMap, MatchModel match) {
     final striker = innings.batters.firstWhere((b) => b.playerId == _strikerId, orElse: () => const BatterScore(playerId: 0, name: 'Select Striker'));
     final nonStriker = innings.batters.firstWhere((b) => b.playerId == _nonStrikerId, orElse: () => const BatterScore(playerId: 0, name: 'Select Non-Striker'));
     final bowlerScore = innings.bowlers.firstWhere((b) => b.playerId == _bowlerId, orElse: () => const BowlerScore(playerId: 0, name: 'Select Bowler'));
@@ -206,7 +207,7 @@ class _ScorerConsoleScreenState extends ConsumerState<ScorerConsoleScreen> {
     );
   }
 
-  List<MapEntry<int, String>> _getBowlingSquad(InningsState innings, match, Map<int, PlayerModel> pMap) {
+  List<MapEntry<int, String>> _getBowlingSquad(InningsState innings, MatchModel match, Map<int, PlayerModel> pMap) {
     final bowlingTeamId = innings.bowlingTeamId;
     final squadStr = bowlingTeamId == match.teamAId ? match.teamASquadIds : match.teamBSquadIds;
     final ids = squadStr.split(',').where((s) => s.isNotEmpty).map(int.tryParse).whereType<int>().toList();
@@ -302,7 +303,7 @@ class _ScorerConsoleScreenState extends ConsumerState<ScorerConsoleScreen> {
   }
 
   // ─── Bowler Change Overlay ─────────────────────────────────
-  Widget _buildBowlerChangeOverlay(InningsState innings, Map<int, PlayerModel> pMap, match) {
+  Widget _buildBowlerChangeOverlay(InningsState innings, Map<int, PlayerModel> pMap, MatchModel match) {
     int localBowlerId = 0;
     final bowlingSquad = _getBowlingSquad(innings, match, pMap)
         .where((e) => e.key != innings.activeBowlerId).toList();
