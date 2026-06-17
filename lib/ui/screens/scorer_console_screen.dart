@@ -456,9 +456,9 @@ class _ScorerConsoleScreenState extends ConsumerState<ScorerConsoleScreen> {
                     Text(_wicketType == 'STUMPED' ? 'Wicket-Keeper' : 'Select Fielder', style: const TextStyle(color: kSlate400, fontSize: 12, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 4),
                     Container(
-                      height: 150,
                       decoration: BoxDecoration(border: Border.all(color: kSlate700), borderRadius: BorderRadius.circular(8)),
-                      child: ListView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: bowlingSquad.map((e) {
                           final isSelected = _wicketFielder == e.value;
                           return ListTile(
